@@ -24,7 +24,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.red[200],
+        backgroundColor: Colors.red,
         title: Text('Formulário de Cadastro'),
       ),
       body: Padding(
