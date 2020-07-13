@@ -9,6 +9,7 @@ class TelaCadastro extends StatefulWidget {
 }
 
 class _TelaCadastroState extends State<TelaCadastro> {
+  final _form = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _cpfController = TextEditingController();
@@ -34,6 +35,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
             Expanded(
               child: SingleChildScrollView(
                 child: Form(
+                  key: _form,
                   child: Column(
                     children: <Widget>[
                       TextFormField(
@@ -71,7 +73,8 @@ class _TelaCadastroState extends State<TelaCadastro> {
                         ),
                         controller: _emailController,
                         validator: (email) {
-                          assert(EmailValidator.validate(email));
+                          if (!EmailValidator.validate(email))
+                            return 'email invalido';
                           return null;
                         },
                         onSaved: (email) {
@@ -92,6 +95,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                         ),
                         controller: _cpfController,
                         validator: (cpf) {
+                          cpf = CnpjCpfBase.maskCpf(_cpfController.text);
                           if (!CnpjCpfBase.isCpfValid(cpf))
                             return 'Por favor digite um cpf valido';
                           return null;
@@ -106,6 +110,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                       Row(
                         children: <Widget>[
                           Expanded(
+                            flex: 2,
                             child: TextFormField(
                               decoration: InputDecoration(
                                 border: OutlineInputBorder(),
@@ -129,6 +134,15 @@ class _TelaCadastroState extends State<TelaCadastro> {
                           SizedBox(
                             width: 10,
                           ),
+                          Expanded(
+                            flex: 1,
+                            child: RaisedButton(
+                              padding: const EdgeInsets.all(8.0),
+                              textColor: Colors.red,
+                              onPressed: () {},
+                              child: new Text("Buscar"),
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(
@@ -137,6 +151,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                       Row(
                         children: <Widget>[
                           Expanded(
+                            flex: 2,
                             child: TextFormField(
                               decoration: InputDecoration(
                                 border: OutlineInputBorder(),
@@ -304,7 +319,20 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   child: RaisedButton(
                     padding: const EdgeInsets.all(8.0),
                     textColor: Colors.red,
-                    onPressed: () {},
+                    onPressed: () {
+                      setState(() {
+                        _nomeController.text = '';
+                        _emailController.text = '';
+                        _cpfController.text = '';
+                        _cepController.text = '';
+                        _ruaController.text = '';
+                        _numeroController.text = '';
+                        _bairroController.text = '';
+                        _cidadeController.text = '';
+                        _paisController.text = '';
+                        _ufController.text = '';
+                      });
+                    },
                     child: new Text("Limpar"),
                   ),
                 ),
@@ -316,7 +344,15 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   child: RaisedButton(
                     padding: const EdgeInsets.all(8.0),
                     textColor: Colors.red,
-                    onPressed: () {},
+                    onPressed: () {
+                      _cpfController.text =
+                          CnpjCpfBase.maskCpf(_cpfController.text);
+                      if (_form.currentState.validate()) {
+                        setState(() {
+                          _form.currentState.save();
+                        });
+                      }
+                    },
                     child: new Text("Cadastrar"),
                   ),
                 ),
