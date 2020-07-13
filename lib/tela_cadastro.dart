@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tela_de_cadastro_gl/services/endereco_service.dart';
 import 'package:tela_de_cadastro_gl/usuario.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:cnpj_cpf_helper/cnpj_cpf_helper.dart';
@@ -21,6 +22,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
   final _paisController = TextEditingController();
   final _ufController = TextEditingController();
   final usuario = Usuario();
+  var enderecoService = EnderecoService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,7 +37,6 @@ class _TelaCadastroState extends State<TelaCadastro> {
             Expanded(
               child: SingleChildScrollView(
                 child: Form(
-                  key: _form,
                   child: Column(
                     children: <Widget>[
                       TextFormField(
@@ -73,8 +74,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                         ),
                         controller: _emailController,
                         validator: (email) {
-                          if (!EmailValidator.validate(email))
-                            return 'email invalido';
+                          assert(EmailValidator.validate(email));
                           return null;
                         },
                         onSaved: (email) {
@@ -95,7 +95,6 @@ class _TelaCadastroState extends State<TelaCadastro> {
                         ),
                         controller: _cpfController,
                         validator: (cpf) {
-                          cpf = CnpjCpfBase.maskCpf(_cpfController.text);
                           if (!CnpjCpfBase.isCpfValid(cpf))
                             return 'Por favor digite um cpf valido';
                           return null;
@@ -127,7 +126,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                 return null;
                               },
                               onSaved: (cep) {
-                                usuario.cep = cep;
+                                usuario.endereco.cep = cep;
                               },
                             ),
                           ),
@@ -139,7 +138,15 @@ class _TelaCadastroState extends State<TelaCadastro> {
                             child: RaisedButton(
                               padding: const EdgeInsets.all(8.0),
                               textColor: Colors.red,
-                              onPressed: () {},
+                              onPressed: () async {
+                                var busca = await enderecoService
+                                    .getEdereco(_cepController.text);
+                                _ruaController.text = busca.rua;
+                                _bairroController.text = busca.bairro;
+                                _cidadeController.text = busca.cidade;
+                                _ufController.text = busca.uf;
+                                _paisController.text = 'Brasil';
+                              },
                               child: new Text("Buscar"),
                             ),
                           ),
@@ -170,7 +177,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                 return null;
                               },
                               onSaved: (rua) {
-                                usuario.rua = rua;
+                                usuario.endereco.rua = rua;
                               },
                             ),
                           ),
@@ -194,7 +201,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                 return null;
                               },
                               onSaved: (numero) {
-                                usuario.numero = int.tryParse(numero);
+                                usuario.endereco.numero = int.tryParse(numero);
                               },
                             ),
                           ),
@@ -224,7 +231,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                 return null;
                               },
                               onSaved: (bairro) {
-                                usuario.bairro = bairro;
+                                usuario.endereco.bairro = bairro;
                               },
                             ),
                           ),
@@ -250,7 +257,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                 return null;
                               },
                               onSaved: (cidade) {
-                                usuario.cidade = cidade;
+                                usuario.endereco.cidade = cidade;
                               },
                             ),
                           ),
@@ -277,7 +284,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                   return 'Estado invalido utilize apenas 2 caracetres';
                               },
                               onSaved: (uf) {
-                                usuario.estado = uf;
+                                usuario.endereco.uf = uf;
                               },
                             ),
                           ),
@@ -301,7 +308,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                 return null;
                               },
                               onSaved: (pais) {
-                                usuario.pais = pais;
+                                usuario.endereco.pais = pais;
                               },
                             ),
                           ),
@@ -319,20 +326,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   child: RaisedButton(
                     padding: const EdgeInsets.all(8.0),
                     textColor: Colors.red,
-                    onPressed: () {
-                      setState(() {
-                        _nomeController.text = '';
-                        _emailController.text = '';
-                        _cpfController.text = '';
-                        _cepController.text = '';
-                        _ruaController.text = '';
-                        _numeroController.text = '';
-                        _bairroController.text = '';
-                        _cidadeController.text = '';
-                        _paisController.text = '';
-                        _ufController.text = '';
-                      });
-                    },
+                    onPressed: () {},
                     child: new Text("Limpar"),
                   ),
                 ),
@@ -344,15 +338,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   child: RaisedButton(
                     padding: const EdgeInsets.all(8.0),
                     textColor: Colors.red,
-                    onPressed: () {
-                      _cpfController.text =
-                          CnpjCpfBase.maskCpf(_cpfController.text);
-                      if (_form.currentState.validate()) {
-                        setState(() {
-                          _form.currentState.save();
-                        });
-                      }
-                    },
+                    onPressed: () {},
                     child: new Text("Cadastrar"),
                   ),
                 ),
