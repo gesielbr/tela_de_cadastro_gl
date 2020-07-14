@@ -35,8 +35,9 @@ class _TelaCadastroState extends State<TelaCadastro> {
         child: Column(
           children: <Widget>[
             Container(
-              width: 150,
-              height: 150,
+              margin: EdgeInsets.fromLTRB(0, 20, 0, 20),
+              width: 100,
+              height: 100,
               child: CircleAvatar(
                   backgroundImage: NetworkImage(
                 'https://scontent.fpoa8-1.fna.fbcdn.net/v/t1.0-9/73252289_2458474090873805_4609788411681701888_n.jpg?_nc_cat=111&_nc_sid=09cbfe&_nc_ohc=8-pBI7-_dg4AX-6ww6a&_nc_ht=scontent.fpoa8-1.fna&oh=0f6fd3847dfdcc7da24e34fd1661ed69&oe=5F2A3780',
