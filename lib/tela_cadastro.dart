@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:cnpj_cpf_formatter/cnpj_cpf_formatter.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:tela_de_cadastro_gl/services/endereco_service.dart';
 import 'package:tela_de_cadastro_gl/usuario.dart';
@@ -23,6 +27,102 @@ class _TelaCadastroState extends State<TelaCadastro> {
   final _ufController = TextEditingController();
   final usuario = Usuario();
   var enderecoService = EnderecoService();
+  var random = Random();
+  Digest avatar;
+
+  void mostrarInformacoes() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: Text('Dados: ${usuario.nome}'),
+          children: <Widget>[
+            //aqui vai outra bolinha
+            Center(
+              child: Container(
+                width: 100,
+                height: 100,
+                child: CircleAvatar(
+                    backgroundImage: NetworkImage(
+                  'https://www.gravatar.com/avatar/$avatar?d=robohash',
+                )),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                top: 20,
+              ),
+              child: Text(
+                'Nome:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                top: 5,
+              ),
+              child: Text('${usuario.nome}'),
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                top: 10,
+              ),
+              child: Text(
+                'Email:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                top: 5,
+              ),
+              child: Text('${usuario.email}'),
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                top: 10,
+              ),
+              child: Text(
+                'CPF:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                top: 5,
+              ),
+              child: Text('${usuario.cpf}'),
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                top: 10,
+              ),
+              child: Text(
+                'Endereço:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                top: 5,
+              ),
+              child: Text(
+                  '${usuario.endereco.rua}, ${usuario.endereco.numero}, ${usuario.endereco.bairro}, ${usuario.endereco.cidade}, ${usuario.endereco.pais}.'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +140,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
               height: 100,
               child: CircleAvatar(
                   backgroundImage: NetworkImage(
-                'https://scontent.fpoa8-1.fna.fbcdn.net/v/t1.0-9/73252289_2458474090873805_4609788411681701888_n.jpg?_nc_cat=111&_nc_sid=09cbfe&_nc_ohc=8-pBI7-_dg4AX-6ww6a&_nc_ht=scontent.fpoa8-1.fna&oh=0f6fd3847dfdcc7da24e34fd1661ed69&oe=5F2A3780',
+                'https://www.gravatar.com/avatar/$avatar?d=robohash',
               )),
             ),
             Expanded(
@@ -113,6 +213,9 @@ class _TelaCadastroState extends State<TelaCadastro> {
                         onSaved: (cpf) {
                           usuario.cpf = cpf;
                         },
+                        inputFormatters: [
+                          CnpjCpfFormatter(eDocumentType: EDocumentType.CPF)
+                        ],
                       ),
                       SizedBox(
                         height: 10,
@@ -152,11 +255,13 @@ class _TelaCadastroState extends State<TelaCadastro> {
                               onPressed: () async {
                                 var busca = await enderecoService
                                     .getEdereco(_cepController.text);
-                                _ruaController.text = busca.rua;
-                                _bairroController.text = busca.bairro;
-                                _cidadeController.text = busca.cidade;
-                                _ufController.text = busca.uf;
-                                _paisController.text = 'Brasil';
+                                if (busca != null) {
+                                  _ruaController.text = busca.rua;
+                                  _bairroController.text = busca.bairro;
+                                  _cidadeController.text = busca.cidade;
+                                  _ufController.text = busca.uf;
+                                  _paisController.text = 'Brasil';
+                                }
                               },
                               icon: Icon(Icons.search),
                               label: Text("Buscar CEP"),
@@ -344,7 +449,21 @@ class _TelaCadastroState extends State<TelaCadastro> {
                     padding: const EdgeInsets.all(8.0),
                     textColor: Colors.black,
                     color: Colors.white,
-                    onPressed: () {},
+                    onPressed: () {
+                      setState(() {
+                        _form.currentState.reset();
+                        _nomeController.clear();
+                        _emailController.clear();
+                        _cpfController.clear();
+                        _cepController.clear();
+                        _ruaController.clear();
+                        _numeroController.clear();
+                        _bairroController.clear();
+                        _cidadeController.clear();
+                        _paisController.clear();
+                        _ufController.clear();
+                      });
+                    },
                     child: new Text("Limpar"),
                   ),
                 ),
@@ -364,128 +483,14 @@ class _TelaCadastroState extends State<TelaCadastro> {
                     padding: const EdgeInsets.all(8.0),
                     textColor: Colors.red,
                     onPressed: () {
-                      _cpfController.text =
-                          CnpjCpfBase.maskCpf(_cpfController.text);
                       if (_form.currentState.validate()) {
                         setState(() {
                           _form.currentState.save();
+                          avatar =
+                              md5.convert(utf8.encode(_emailController.text));
                         });
+                        mostrarInformacoes();
                       }
-
-                      {
-                        return showDialog(
-                          context: context,
-                          builder: (context) {
-                            return SimpleDialog(
-                              title: Text('Dados: ${usuario.nome}'),
-                              children: <Widget>[
-                                //aqui vai outra bolinha
-                                Center(
-                                  child: Container(
-                                    width: 100,
-                                    height: 100,
-                                    child: CircleAvatar(
-                                        backgroundImage: NetworkImage(
-                                      'https://scontent.fpoa8-1.fna.fbcdn.net/v/t1.0-9/73252289_2458474090873805_4609788411681701888_n.jpg?_nc_cat=111&_nc_sid=09cbfe&_nc_ohc=8-pBI7-_dg4AX-6ww6a&_nc_ht=scontent.fpoa8-1.fna&oh=0f6fd3847dfdcc7da24e34fd1661ed69&oe=5F2A3780',
-                                    )),
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 20,
-                                    top: 20,
-                                  ),
-                                  child: Text(
-                                    'Nome:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 20,
-                                    top: 5,
-                                  ),
-                                  child: Text('${usuario.nome}'),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 20,
-                                    top: 10,
-                                  ),
-                                  child: Text(
-                                    'Email:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 20,
-                                    top: 5,
-                                  ),
-                                  child: Text('${usuario.email}'),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 20,
-                                    top: 10,
-                                  ),
-                                  child: Text(
-                                    'CPF:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 20,
-                                    top: 5,
-                                  ),
-                                  child: Text('${usuario.cpf}'),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 20,
-                                    top: 10,
-                                  ),
-                                  child: Text(
-                                    'Email:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 20,
-                                  ),
-                                  child: Text('${usuario.email}'),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 20,
-                                    top: 10,
-                                  ),
-                                  child: Text(
-                                    'Endereço:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.only(
-                                    left: 20,
-                                    top: 5,
-                                  ),
-                                  child: Text(
-                                      '${usuario.endereco.rua}, ${usuario.endereco.numero}, ${usuario.endereco.bairro}, ${usuario.endereco.cidade}, ${usuario.endereco.pais}.'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-                      ;
                     },
                     child: new Text("Cadastrar"),
                   ),

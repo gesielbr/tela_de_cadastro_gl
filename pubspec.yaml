@@ -26,6 +26,8 @@ dependencies:
   email_validator: '^1.0.0'
   cnpj_cpf_helper: ^1.0.8
   dio: ^3.0.9
+  crypto: ^2.1.4
+  cnpj_cpf_formatter: ^1.0.8
 
   
 
